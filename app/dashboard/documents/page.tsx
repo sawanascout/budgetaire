@@ -198,31 +198,19 @@ export default function DocumentsPage() {
     doc.text(`Rejetés: ${stats.rejetes}`, 170, 85)
 
     // Table data
-    const tableData = documents
-      .filter((doc) => {
-        const matchesSearch =
-          doc.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          doc.par.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (doc.mission?.nom && doc.mission.nom.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (doc.rubrique?.nom && doc.rubrique.nom.toLowerCase().includes(searchTerm.toLowerCase()))
-
-        const matchesCategory = selectedCategory === "Toutes catégories" || doc.categorie === selectedCategory
-        const matchesStatus = selectedStatus === "Tous statuts" || doc.statut === selectedStatus
-        return matchesSearch && matchesCategory && matchesStatus
-      })
-      .map((doc) => [
-        doc.nom,
-        doc.type,
-        doc.categorie,
-        doc.statut,
-        doc.mission?.nom || "Non assignée",
-        doc.rubrique?.nom || "Non assignée",
-        new Date(doc.createdAt).toLocaleDateString("fr-FR"),
-        doc.par,
-      ])
+    const tableData = filteredDocuments.map((doc) => [
+      doc.nom,
+      doc.type,
+      doc.categorie,
+      doc.statut,
+      doc.mission?.nom || "Non assignée",
+      doc.rubrique?.nom || "Non assignée",
+      new Date(doc.createdAt).toLocaleDateString("fr-FR"),
+      doc.par,
+    ])
 
     // Generate table
-    ;(doc as any).autoTable({
+    doc.autoTable({
       head: [["Nom", "Type", "Catégorie", "Statut", "Mission", "Rubrique", "Date", "Par"]],
       body: tableData,
       startY: 95,
@@ -231,7 +219,7 @@ export default function DocumentsPage() {
     })
 
     // Footer
-    const finalY = (doc as any).lastAutoTable.finalY + 20
+    const finalY = doc.lastAutoTable.finalY + 20
     doc.setFontSize(8)
     doc.text("Ce rapport a été généré automatiquement par le système de gestion documentaire du CFED", 105, finalY, {
       align: "center",
@@ -240,9 +228,7 @@ export default function DocumentsPage() {
       align: "center",
     })
 
-    // Save with explicit filename
-    const currentDate = new Date().toISOString().split("T")[0]
-    doc.save(`CFED_Rapport_Documents_${currentDate}.pdf`)
+    doc.save(`export_documents_${new Date().toISOString().split("T")[0]}.pdf`)
     toast.success("Export PDF réalisé avec succès !")
   }
 
@@ -285,9 +271,7 @@ export default function DocumentsPage() {
     yPos += 10
     pdfDoc.text(`Par: ${doc.par}`, 20, yPos)
     yPos += 10
-    if (doc.description) {
-      pdfDoc.text(`Description: ${doc.description}`, 20, yPos)
-    }
+    pdfDoc.text(`Description: ${doc.description}`, 20, yPos)
 
     // Signatures
     yPos += 30
@@ -295,9 +279,7 @@ export default function DocumentsPage() {
     pdfDoc.text("LE COMPTABLE", 105, yPos)
     pdfDoc.text("LE DIRECTEUR", 170, yPos)
 
-    // Save with explicit filename
-    const currentDate = new Date().toISOString().split("T")[0]
-    pdfDoc.save(`CFED_Certificat_${doc.nom.replace(/[^a-zA-Z0-9]/g, "_")}_${currentDate}.pdf`)
+    pdfDoc.save(`certificat_${doc.nom.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`)
     toast.success("Certificat du document téléchargé !")
   }
 
@@ -708,7 +690,7 @@ export default function DocumentsPage() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">{selectedStatus}</Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => setSelectedStatus("Tous statuts")}>Tous statuts</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSelectedStatus("Validé")}>Validé</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSelectedStatus("En Attente")}>En Attente</DropdownMenuItem>
