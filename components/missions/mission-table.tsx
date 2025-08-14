@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+import jsPDF from "jspdf"
+import "jspdf-autotable"
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -34,255 +36,148 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
   }
 
   const downloadPaymentOrder = (mission: Mission) => {
-    // Generate PDF content
-    const pdfContent = generatePaymentOrderPDF(mission)
-
-    // Create blob and download
-    const blob = new Blob([pdfContent], { type: "text/html" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `ordre-de-paiement-${mission.reference}.html`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
-
-  const generatePaymentOrderPDF = (mission: Mission) => {
+    const doc = new jsPDF()
     const currentDate = new Date().toLocaleDateString("fr-FR", {
       year: "numeric",
       month: "long",
       day: "numeric",
     })
 
-    return `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ordre de Paiement ${mission.reference}</title>
-    <style>
-        body {
-            font-family: 'Times New Roman', serif;
-            margin: 0;
-            padding: 40px;
-            background: white;
-            line-height: 1.4;
-        }
-        .document {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 3px solid #333;
-            padding-bottom: 20px;
-        }
-        .logo-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        .logo-placeholder {
-            width: 80px;
-            height: 80px;
-            border: 2px solid #666;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: #666;
-        }
-        .title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #333;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .subtitle {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        .date-location {
-            text-align: right;
-            margin: 30px 0;
-            font-style: italic;
-        }
-        .beneficiary-section {
-            margin: 30px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
-        }
-        .info-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        .info-table td {
-            padding: 12px;
-            border: 1px solid #ddd;
-            vertical-align: top;
-        }
-        .info-table .label {
-            background-color: #f8f9fa;
-            font-weight: bold;
-            width: 25%;
-        }
-        .amount-section {
-            background-color: #f8f9fa;
-            padding: 20px;
-            margin: 30px 0;
-            border: 2px solid #333;
-        }
-        .payment-mode {
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            margin: 30px 0;
-            padding: 15px;
-            border: 1px solid #333;
-        }
-        .signatures {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 80px;
-            padding-top: 40px;
-        }
-        .signature-block {
-            text-align: center;
-            width: 30%;
-        }
-        .signature-line {
-            border-top: 1px solid #333;
-            margin-top: 60px;
-            padding-top: 10px;
-            font-weight: bold;
-        }
-        .amount-words {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
-            background-color: #f9f9f9;
-        }
-        @media print {
-            body { background: white; }
-        }
-    </style>
-</head>
-<body>
-    <div class="document">
-        <div class="logo-section">
-            <div class="logo-placeholder">LOGO</div>
-            <div style="text-align: center; flex: 1;">
-                <div style="font-size: 16px; font-weight: bold;">جمهورية الإسلامية الموريتانية</div>
-                <div style="font-size: 14px; font-weight: bold;">République Islamique de Mauritanie</div>
-                <div style="font-size: 12px; margin: 5px 0;">شرف - أخاء - عدل</div>
-                <div style="font-size: 12px;">Honneur - Fraternité - Justice</div>
-            </div>
-            <div class="logo-placeholder">CFED</div>
-        </div>
-        
-        <div style="text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 18px; font-weight: bold;">Centre de Formation et d'Échange à Distance (CFED)</div>
-            <div style="font-size: 14px; color: #666; margin-top: 5px;">مركز التكوين والتبادل عن بعد</div>
-        </div>
+    // Add header with logos
+    doc.setFontSize(12)
+    doc.setFont("helvetica", "bold")
 
-        <div class="title">ORDRE DE PAIEMENT ${mission.reference}/2025</div>
-        
-        <div class="date-location">
-            Nouakchott, le ${currentDate}
-        </div>
+    // Left logo placeholder
+    doc.circle(30, 30, 15)
+    doc.setFontSize(8)
+    doc.text("LOGO", 25, 32)
 
-        <div class="beneficiary-section">
-            <table class="info-table">
-                <tr>
-                    <td class="label">Bénéficiaire</td>
-                    <td colspan="3"><strong>${mission.nomMissionnaire}</strong></td>
-                </tr>
-            </table>
-        </div>
+    // Right logo placeholder
+    doc.circle(180, 30, 15)
+    doc.text("CFED", 175, 32)
 
-        <table class="info-table">
-            <tr>
-                <td class="label">Budget</td>
-                <td class="label">Exercice</td>
-                <td class="label">Compte Principal</td>
-                <td class="label">Sous Compte</td>
-            </tr>
-            <tr>
-                <td>CFED</td>
-                <td>2025</td>
-                <td>65</td>
-                <td>65010</td>
-            </tr>
-        </table>
+    // Center header
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "bold")
+    doc.text("جمهورية الإسلامية الموريتانية", 105, 20, { align: "center" })
+    doc.text("République Islamique de Mauritanie", 105, 28, { align: "center" })
+    doc.setFontSize(8)
+    doc.text("شرف - أخاء - عدل", 105, 35, { align: "center" })
+    doc.text("Honneur - Fraternité - Justice", 105, 42, { align: "center" })
 
-        <div class="amount-section">
-            <table class="info-table">
-                <tr>
-                    <td class="label">Montant</td>
-                    <td class="label">Précompte</td>
-                    <td class="label">Montant Net à Payer</td>
-                </tr>
-                <tr>
-                    <td style="font-size: 16px; font-weight: bold;">${formatMRU(mission.total)}</td>
-                    <td>0.00</td>
-                    <td style="font-size: 16px; font-weight: bold; color: #d63384;">${formatMRU(mission.total)}</td>
-                </tr>
-            </table>
+    // Organization name
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "bold")
+    doc.text("Centre de Formation et d'Échange à Distance (CFED)", 105, 55, { align: "center" })
+    doc.setFontSize(8)
+    doc.text("مركز التكوين والتبادل عن بعد", 105, 62, { align: "center" })
 
-            <div style="margin: 20px 0;">
-                <strong>Motif de règlement:</strong><br>
-                RÈGLEMENT HONORAIRE AIDE COMPTABLE CFED MOIS DE ${new Date(mission.date).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }).toUpperCase()}
-            </div>
-        </div>
+    // Title
+    doc.setFontSize(16)
+    doc.setFont("helvetica", "bold")
+    doc.text(`ORDRE DE PAIEMENT ${mission.reference}/2025`, 105, 80, { align: "center" })
 
-        <div class="payment-mode">
-            MODE DE PAIEMENT
-        </div>
+    // Date and location
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "italic")
+    doc.text(`Nouakchott, le ${currentDate}`, 170, 95)
 
-        <div style="margin: 20px 0; text-align: center;">
-            <strong>${mission.modePaiement}</strong>
-            ${mission.modePaiement === "Chèque" ? `<br>Chèque N° ${mission.reference}` : ""}
-        </div>
+    // Beneficiary section
+    doc.setFontSize(12)
+    doc.setFont("helvetica", "bold")
+    doc.text("Bénéficiaire", 20, 115)
+    doc.setFont("helvetica", "normal")
+    doc.rect(20, 120, 170, 15)
+    doc.text(mission.nomMissionnaire, 25, 130)
 
-        <div class="amount-words">
-            <table class="info-table">
-                <tr>
-                    <td style="width: 70%;">Arrêté le présent Ordre de Paiement à la somme de</td>
-                    <td style="text-align: center; font-weight: bold;">(en Ouguiya)</td>
-                </tr>
-                <tr>
-                    <td><strong>Douze-mille</strong></td>
-                    <td style="text-align: center; font-size: 16px; font-weight: bold;">${formatMRU(mission.total)}</td>
-                </tr>
-            </table>
-        </div>
+    // Budget table
+    const budgetData = [
+      ["Budget", "Exercice", "Compte Principal", "Sous Compte"],
+      ["CFED", "2025", "65", "65010"],
+    ]
+    ;(doc as any).autoTable({
+      startY: 145,
+      head: [budgetData[0]],
+      body: [budgetData[1]],
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 5 },
+      headStyles: { fillColor: [248, 249, 250], textColor: [0, 0, 0] },
+    })
 
-        <div class="signatures">
-            <div class="signature-block">
-                <div><strong>POUR ACQUIT</strong></div>
-                <div class="signature-line"></div>
-            </div>
-            <div class="signature-block">
-                <div><strong>LE COMPTABLE</strong></div>
-                <div class="signature-line"></div>
-            </div>
-            <div class="signature-block">
-                <div><strong>LE DIRECTEUR</strong></div>
-                <div class="signature-line"></div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>`
+    // Amount section
+    const amountData = [
+      ["Montant", "Précompte", "Montant Net à Payer"],
+      [formatMRU(mission.total), "0.00", formatMRU(mission.total)],
+    ]
+    ;(doc as any).autoTable({
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [amountData[0]],
+      body: [amountData[1]],
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 5 },
+      headStyles: { fillColor: [248, 249, 250], textColor: [0, 0, 0] },
+      columnStyles: {
+        0: { fontStyle: "bold" },
+        2: { fontStyle: "bold", textColor: [214, 51, 132] },
+      },
+    })
+
+    // Payment reason
+    const yPos = (doc as any).lastAutoTable.finalY + 15
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "bold")
+    doc.text("Motif de règlement:", 20, yPos)
+    doc.setFont("helvetica", "normal")
+    const motif = `RÈGLEMENT HONORAIRE AIDE COMPTABLE CFED MOIS DE ${new Date(mission.date).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }).toUpperCase()}`
+    doc.text(motif, 20, yPos + 8, { maxWidth: 170 })
+
+    // Payment mode
+    doc.setFontSize(14)
+    doc.setFont("helvetica", "bold")
+    doc.rect(20, yPos + 25, 170, 20)
+    doc.text("MODE DE PAIEMENT", 105, yPos + 32, { align: "center" })
+    doc.text(mission.modePaiement, 105, yPos + 40, { align: "center" })
+
+    if (mission.modePaiement === "Chèque") {
+      doc.text(`Chèque N° ${mission.reference}`, 105, yPos + 48, { align: "center" })
+    }
+
+    // Amount in words
+    const amountWordsData = [
+      ["Arrêté le présent Ordre de Paiement à la somme de", "(en Ouguiya)"],
+      ["Douze-mille", formatMRU(mission.total)],
+    ]
+    ;(doc as any).autoTable({
+      startY: yPos + 60,
+      head: [amountWordsData[0]],
+      body: [amountWordsData[1]],
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 5 },
+      headStyles: { fillColor: [248, 249, 250], textColor: [0, 0, 0] },
+      columnStyles: {
+        0: { cellWidth: 120 },
+        1: { cellWidth: 50, halign: "center", fontStyle: "bold" },
+      },
+    })
+
+    // Signatures
+    const sigY = (doc as any).lastAutoTable.finalY + 30
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "bold")
+
+    // Three signature blocks
+    doc.text("POUR ACQUIT", 35, sigY, { align: "center" })
+    doc.text("LE COMPTABLE", 105, sigY, { align: "center" })
+    doc.text("LE DIRECTEUR", 175, sigY, { align: "center" })
+
+    // Signature lines
+    doc.line(20, sigY + 25, 50, sigY + 25)
+    doc.line(90, sigY + 25, 120, sigY + 25)
+    doc.line(160, sigY + 25, 190, sigY + 25)
+
+    // Save the PDF
+    const fileName = `CFED_Ordre_Paiement_${mission.reference}_${new Date().toISOString().split("T")[0]}.pdf`
+    doc.save(fileName)
   }
 
   if (missions.length === 0) {
