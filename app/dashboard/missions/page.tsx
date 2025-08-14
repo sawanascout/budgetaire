@@ -58,6 +58,11 @@ export default function MissionsPage() {
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null)
   const { toast } = useToast()
 
+  const handleLogout = async () => {
+    await logoutUser()
+    window.location.href = "/login"
+  }
+
   useEffect(() => {
     fetchData()
     fetchUser()
@@ -98,10 +103,6 @@ export default function MissionsPage() {
     setUser(currentUser)
   }
 
-  const handleLogout = async () => {
-    await logoutUser()
-  }
-
   const getInitials = (nom, prenom) => {
     return `${prenom?.charAt(0) || ""}${nom?.charAt(0) || ""}`.toUpperCase()
   }
@@ -140,6 +141,51 @@ export default function MissionsPage() {
   const handleDeleteMission = (mission: Mission) => {
     setSelectedMission(mission)
     setIsDeleteModalOpen(true)
+  }
+
+  const handleExportMissions = () => {
+    const csvContent = [
+      [
+        "Date",
+        "Missionnaire",
+        "Montant/Jour",
+        "Nombre de Jours",
+        "Total",
+        "Mode de Paiement",
+        "Référence",
+        "Statut",
+        "Activités",
+        "Dépenses",
+      ].join(","),
+      ...filteredMissions.map((mission) =>
+        [
+          `"${new Date(mission.date).toLocaleDateString("fr-FR")}"`,
+          `"${mission.nomMissionnaire}"`,
+          `"${mission.montantParJour} MRU"`,
+          `"${mission.nombreJours}"`,
+          `"${mission.total} MRU"`,
+          `"${mission.modePaiement}"`,
+          `"${mission.reference}"`,
+          `"${mission.statut}"`,
+          `"${mission.activitesCount}"`,
+          `"${mission.depensesCount}"`,
+        ].join(","),
+      ),
+    ].join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `missions_export_${new Date().toISOString().split("T")[0]}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast({
+      title: "Succès",
+      description: "Export des missions réalisé avec succès !",
+    })
   }
 
   const handleSubmitForm = async (data: any) => {
@@ -406,7 +452,11 @@ export default function MissionsPage() {
             </DropdownMenu>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" className="flex items-center space-x-2 bg-transparent">
+            <Button
+              variant="outline"
+              className="flex items-center space-x-2 bg-transparent"
+              onClick={handleExportMissions}
+            >
               <Download className="w-4 h-4" />
               <span>Exporter</span>
             </Button>

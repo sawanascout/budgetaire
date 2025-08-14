@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -16,9 +17,11 @@ import {
   Award,
   Settings,
   UserCheck,
+  Download,
 } from "lucide-react"
 import { getDashboardData } from "./actions"
 import { DashboardHeader } from "@/components/dashboard-header"
+import toast from "react-hot-toast"
 
 // Mapping des icônes par rubrique
 const rubriqueIcons = {
@@ -83,6 +86,38 @@ export default function DashboardPage() {
     window.location.href = `/dashboard/rubriques/${rubriqueId}`
   }
 
+  const handleExportDashboard = () => {
+    const dashboardData = [
+      ["Type", "Valeur"],
+      ["Budget Total Alloué", `${stats.budgetTotal} MRU`],
+      ["Montant Dépensé", `${stats.depensesEffectuees} MRU`],
+      ["Reste à Consommer", `${stats.resteAConsommer} MRU`],
+      ["Taux de Réalisation", `${stats.tauxRealisation.toFixed(1)}%`],
+      ["", ""],
+      ["Rubriques", ""],
+      ["Nom", "Budget", "Dépensé", "Progression"],
+      ...rubriques.map((rubrique) => [
+        `"${rubrique.nom}"`,
+        `"${rubrique.budget} MRU"`,
+        `"${rubrique.depense} MRU"`,
+        `"${rubrique.progression.toFixed(1)}%"`,
+      ]),
+    ]
+
+    const csvContent = dashboardData.map((row) => row.join(",")).join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `dashboard_export_${new Date().toISOString().split("T")[0]}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success("Export du tableau de bord réalisé avec succès !")
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -103,6 +138,18 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <div className="px-8 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">Tableau de Bord</h2>
+          <Button
+            variant="outline"
+            onClick={handleExportDashboard}
+            className="flex items-center space-x-2 bg-transparent"
+          >
+            <Download className="w-4 h-4" />
+            <span>Exporter les Données</span>
+          </Button>
+        </div>
+
         {/* Top Metrics - 3 cards seulement */}
         <div className="grid grid-cols-3 gap-6 mb-8">
           <Card className="bg-white shadow-sm">

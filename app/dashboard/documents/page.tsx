@@ -151,6 +151,264 @@ export default function DocumentsPage() {
     }
   }
 
+  const handleExportDocuments = () => {
+    const csvContent = [
+      ["Nom", "Type", "Catégorie", "Statut", "Mission", "Rubrique", "Date de téléversement", "Par", "Description"].join(
+        ",",
+      ),
+      ...documents.map((doc) =>
+        [
+          `"${doc.nom}"`,
+          `"${doc.type}"`,
+          `"${doc.categorie}"`,
+          `"${doc.statut}"`,
+          `"${doc.mission?.nom || "Non assignée"}"`,
+          `"${doc.rubrique?.nom || "Non assignée"}"`,
+          `"${new Date(doc.createdAt).toLocaleDateString("fr-FR", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}"`,
+          `"${doc.par}"`,
+          `"${doc.description || ""}"`,
+        ].join(","),
+      ),
+    ].join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `documents_export_${new Date().toISOString().split("T")[0]}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success("Export réalisé avec succès !")
+  }
+
+  const handleDownloadCertificate = (doc: Document) => {
+    if (doc.statut !== "Validé") {
+      toast.error("Seuls les documents validés peuvent générer un certificat")
+      return
+    }
+
+    const certificateContent = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Certificat de Validation - ${doc.nom}</title>
+        <style>
+          body { 
+            font-family: 'Times New Roman', serif; 
+            margin: 0; 
+            padding: 40px; 
+            background: white;
+            line-height: 1.6;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+          }
+          .logo-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+          }
+          .logo-placeholder {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #666;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+          }
+          .title { 
+            font-size: 28px; 
+            font-weight: bold; 
+            color: #1e40af;
+            margin: 20px 0;
+          }
+          .subtitle {
+            font-size: 18px;
+            color: #374151;
+            margin-bottom: 10px;
+          }
+          .content { 
+            margin: 40px 0; 
+            font-size: 16px;
+          }
+          .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+          }
+          .info-table td {
+            padding: 12px;
+            border: 1px solid #d1d5db;
+          }
+          .info-table .label {
+            background-color: #f3f4f6;
+            font-weight: bold;
+            width: 200px;
+          }
+          .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 80px;
+            padding-top: 40px;
+          }
+          .signature-block {
+            text-align: center;
+            width: 200px;
+          }
+          .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 60px;
+            padding-top: 10px;
+          }
+          .date-location {
+            text-align: right;
+            margin: 30px 0;
+            font-style: italic;
+          }
+          .certificate-number {
+            text-align: center;
+            font-weight: bold;
+            color: #dc2626;
+            margin: 20px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="logo-section">
+          <div class="logo-placeholder">LOGO</div>
+          <div style="text-align: center; flex: 1;">
+            <div style="font-weight: bold; font-size: 16px;">République Islamique de Mauritanie</div>
+            <div style="font-size: 14px; margin: 5px 0;">Honneur - Fraternité - Justice</div>
+            <div style="font-size: 14px; font-weight: bold; margin-top: 15px;">
+              Centre de Formation et d'Échange à Distance (CFED)
+            </div>
+          </div>
+          <div class="logo-placeholder">CFED</div>
+        </div>
+
+        <div class="header">
+          <div class="title">CERTIFICAT DE VALIDATION DE DOCUMENT</div>
+          <div class="certificate-number">N° ${String(doc.id).padStart(6, "0")}/2025</div>
+        </div>
+
+        <div class="date-location">
+          Nouakchott, le ${new Date().toLocaleDateString("fr-FR", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </div>
+
+        <div class="content">
+          <p style="font-size: 18px; margin-bottom: 30px;">
+            <strong>Le Centre de Formation et d'Échange à Distance certifie par la présente que :</strong>
+          </p>
+
+          <table class="info-table">
+            <tr>
+              <td class="label">Nom du Document</td>
+              <td><strong>${doc.nom}</strong></td>
+            </tr>
+            <tr>
+              <td class="label">Type de Document</td>
+              <td>${doc.type}</td>
+            </tr>
+            <tr>
+              <td class="label">Catégorie</td>
+              <td>${doc.categorie}</td>
+            </tr>
+            <tr>
+              <td class="label">Mission Associée</td>
+              <td>${doc.mission?.nom || "Non assignée"}</td>
+            </tr>
+            <tr>
+              <td class="label">Rubrique</td>
+              <td>${doc.rubrique?.nom || "Non assignée"}</td>
+            </tr>
+            <tr>
+              <td class="label">Date de Téléversement</td>
+              <td>${new Date(doc.createdAt).toLocaleDateString("fr-FR", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}</td>
+            </tr>
+            <tr>
+              <td class="label">Téléversé par</td>
+              <td>${doc.par}</td>
+            </tr>
+            <tr>
+              <td class="label">Statut</td>
+              <td><strong style="color: #059669;">VALIDÉ</strong></td>
+            </tr>
+            ${
+              doc.description
+                ? `
+            <tr>
+              <td class="label">Description</td>
+              <td>${doc.description}</td>
+            </tr>
+            `
+                : ""
+            }
+          </table>
+
+          <p style="margin: 30px 0; font-size: 16px;">
+            Ce document a été examiné, vérifié et validé conformément aux procédures en vigueur 
+            au sein du Centre de Formation et d'Échange à Distance.
+          </p>
+
+          <p style="margin: 30px 0; font-size: 16px;">
+            <strong>Référence de validation :</strong> DOC-${String(doc.id).padStart(6, "0")}-${new Date().getFullYear()}
+          </p>
+        </div>
+
+        <div class="signatures">
+          <div class="signature-block">
+            <div><strong>LE RESPONSABLE DOCUMENTS</strong></div>
+            <div class="signature-line">Signature et Cachet</div>
+          </div>
+          <div class="signature-block">
+            <div><strong>LE DIRECTEUR</strong></div>
+            <div class="signature-line">Signature et Cachet</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 60px; text-align: center; font-size: 12px; color: #6b7280;">
+          <p>Ce certificat est généré automatiquement par le système de gestion documentaire du CFED</p>
+          <p>Pour toute vérification, contactez le Centre de Formation et d'Échange à Distance</p>
+        </div>
+      </body>
+      </html>
+    `
+
+    const blob = new Blob([certificateContent], { type: "text/html" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `certificat_validation_${doc.nom.replace(/[^a-zA-Z0-9]/g, "_")}.html`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    toast.success("Certificat de validation téléchargé !")
+  }
+
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch =
       doc.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -281,7 +539,7 @@ export default function DocumentsPage() {
               <Upload className="w-4 h-4 mr-2" />
               Téléverser Document
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExportDocuments}>
               <Download className="w-4 h-4 mr-2" />
               Export Liste
             </Button>
@@ -389,6 +647,12 @@ export default function DocumentsPage() {
                           <Download className="w-4 h-4 mr-2" />
                           Télécharger
                         </DropdownMenuItem>
+                        {doc.statut === "Validé" && (
+                          <DropdownMenuItem onClick={() => handleDownloadCertificate(doc)}>
+                            <FileText className="w-4 h-4 mr-2" />
+                            Certificat de Validation
+                          </DropdownMenuItem>
+                        )}
                         {doc.statut === "En Attente" && (
                           <>
                             <DropdownMenuItem onClick={() => handleStatusChange(doc.id, "Validé")}>
