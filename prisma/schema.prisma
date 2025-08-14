@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Role {
+  id            Int          @id @default(autoincrement())
+  nom           String
+  description   String
+  utilisateurs  Utilisateur[] @relation("UserRoles")
+}
+
+
+model Utilisateur {
+  id         Int      @id @default(autoincrement())
+  nom        String
+  prenom     String
+  email      String   @unique
+  motDePasse String
+  roles      Role[]   @relation("UserRoles")
+  rapports   Rapport[]
+  journal    JournalAction[]
+}
+model Rapport {
+  id             Int      @id @default(autoincrement())
+  type           String
+  filtres        String
+  format         String
+  dateGeneration String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  utilisateurId  Int
+  utilisateur    Utilisateur @relation(fields: [utilisateurId], references: [id])
+}
+
+model JournalAction {
+  id            Int      @id @default(autoincrement())
+  action        String
+  dateAction    String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  utilisateurId Int
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+}
+
+model Mission {
+  id             Int        @id @default(autoincrement())
+  date           DateTime
+  nomMissionnaire String
+  montantParJour Float
+  nombreJours    Int
+  modePaiement   String
+  reference      String
+  statut         String     @default("En Attente")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  activites      Activite[]
+  depenses       Depense[]
+  documents      Document[]
+}
+
+model Activite {
+  id                 Int        @id @default(autoincrement())
+  titre              String
+  responsable        String?
+  description        String
+  dateDebut          DateTime
+  dateFin            DateTime
+  budgetPrevu        Float
+  budgetConsomme     Float      @default(0)
+  region             String
+  nombreParticipants Int?
+  objectifs          String?
+  resultatsAttendus  String?
+  methodologie       String?
+  rubriqueId         Int
+  missionId          Int?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  rubrique           Rubrique   @relation(fields: [rubriqueId], references: [id])
+  mission            Mission?   @relation(fields: [missionId], references: [id])
+  depenses           Depense[]
+  documents          Document[]
+}
+
+model Depense {
+  id          Int      @id @default(autoincrement())
+  libelle     String
+  montant     Float
+  date        DateTime
+  type        String
+  statut      String   @default("En Attente")
+  rubriqueId  Int
+  missionId   Int?
+  activiteId  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  rubrique    Rubrique @relation(fields: [rubriqueId], references: [id])
+  mission     Mission? @relation(fields: [missionId], references: [id])
+  activite    Activite? @relation(fields: [activiteId], references: [id])
+}
+
+model Document {
+  id           Int       @id @default(autoincrement())
+  nom          String
+  type         String
+  chemin       String
+  categorie    String
+  statut       String    @default("En Attente")
+  description  String?
+  par          String
+  televerseLe  DateTime  @default(now())
+  rubriqueId   Int
+  missionId    Int?
+  activiteId   Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  rubrique     Rubrique  @relation(fields: [rubriqueId], references: [id])
+  mission      Mission?  @relation(fields: [missionId], references: [id])
+  activite     Activite? @relation(fields: [activiteId], references: [id])
+}
+
+model Rubrique {
+  id          Int        @id @default(autoincrement())
+  nom         String
+  description String?
+  budget      Float?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  activites   Activite[]
+  depenses    Depense[]
+  documents   Document[]
+}

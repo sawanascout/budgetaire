@@ -1,0 +1,58 @@
+-- Insertion des 8 rubriques du projet avec leurs budgets
+INSERT INTO "Rubrique" (nom, description, budget, "createdAt", "updatedAt") VALUES
+(
+  'Mission et Planification',
+  'Planification des missions d''identification et coordination générale du projet',
+  2395000,
+  NOW(),
+  NOW()
+),
+(
+  'Mise en place d''une plateforme numérique et préparation des contenus éducatifs et pédagogiques',
+  'Conception et développement de la plateforme numérique pour la formation continue',
+  420000,
+  NOW(),
+  NOW()
+),
+(
+  'Formation Formateurs et Administrateurs de la Plateforme',
+  'Formation des formateurs et des administrateurs pour l''utilisation de la plateforme',
+  4526000,
+  NOW(),
+  NOW()
+),
+(
+  'Opérationnalisation des centres Locaux',
+  'Mise en place et opérationnalisation des centres de formation locaux',
+  7493000,
+  NOW(),
+  NOW()
+),
+(
+  'Coaching des inspecteurs Pédagogiques',
+  'Accompagnement et coaching des inspecteurs pédagogiques',
+  0,
+  NOW(),
+  NOW()
+),
+(
+  'Formation des enseignants',
+  'Formation continue des enseignants sur les nouvelles méthodes pédagogiques',
+  0,
+  NOW(),
+  NOW()
+),
+(
+  'Certification & Suivi et Evaluation',
+  'Processus de certification et système de suivi et évaluation',
+  823000,
+  NOW(),
+  NOW()
+),
+(
+  'Charge Siège Fonctionnement et Gestion',
+  'Frais de fonctionnement et de gestion du siège du projet',
+  5490000,
+  NOW(),
+  NOW()
+);
