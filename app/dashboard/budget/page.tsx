@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BarChart3, TrendingUp, DollarSign, Download } from "lucide-react"
 import { getBudgetData } from "./actions"
 import { DashboardHeader } from "@/components/dashboard-header"
+import jsPDF from "jspdf"
+import "jspdf-autotable"
 
 type BudgetStats = {
   budgetAlloue: number
@@ -83,6 +85,84 @@ export default function BudgetPage() {
     return "bg-green-500"
   }
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF()
+
+    // En-tête officiel mauritanien
+    doc.setFontSize(16)
+    doc.setFont("helvetica", "bold")
+    doc.text("République Islamique de Mauritanie", 105, 20, { align: "center" })
+    doc.setFontSize(12)
+    doc.setFont("helvetica", "normal")
+    doc.text("Honneur - Fraternité - Justice", 105, 30, { align: "center" })
+
+    doc.setFontSize(14)
+    doc.setFont("helvetica", "bold")
+    doc.text("Centre de Formation et d'Échange à Distance (CFED)", 105, 45, { align: "center" })
+    doc.text("Plateforme pour la Formation Continue des Enseignants", 105, 55, { align: "center" })
+
+    // Titre du rapport
+    doc.setFontSize(18)
+    doc.text("RAPPORT DE SUIVI BUDGÉTAIRE", 105, 75, { align: "center" })
+
+    // Date
+    doc.setFontSize(10)
+    doc.text(`Généré le: ${new Date().toLocaleDateString("fr-FR")}`, 20, 90)
+
+    // Statistiques principales
+    doc.setFontSize(14)
+    doc.setFont("helvetica", "bold")
+    doc.text("STATISTIQUES BUDGÉTAIRES", 20, 110)
+
+    const statsData = [
+      ["Montant Total Alloué", formatMRU(stats.budgetAlloue)],
+      ["Montant Dépensé", formatMRU(stats.depensesEffectuees)],
+      ["Reste à Consommer", formatMRU(stats.budgetAlloue - stats.depensesEffectuees)],
+      ["Taux de Consommation", `${((stats.depensesEffectuees / stats.budgetAlloue) * 100).toFixed(1)}%`],
+    ]
+
+    doc.autoTable({
+      startY: 120,
+      head: [["Indicateur", "Valeur"]],
+      body: statsData,
+      theme: "grid",
+      headStyles: { fillColor: [41, 128, 185] },
+      styles: { fontSize: 10 },
+    })
+
+    // Budget par rubrique
+    doc.setFontSize(14)
+    doc.setFont("helvetica", "bold")
+    doc.text("BUDGET PAR RUBRIQUE", 20, doc.lastAutoTable.finalY + 20)
+
+    const rubriqueData = rubriques.map((rubrique) => [
+      rubrique.nom,
+      formatMRU(rubrique.budgetAlloue),
+      formatMRU(rubrique.depense),
+      formatMRU(rubrique.disponible),
+      `${rubrique.progression.toFixed(1)}%`,
+    ])
+
+    doc.autoTable({
+      startY: doc.lastAutoTable.finalY + 30,
+      head: [["Rubrique", "Budget Alloué", "Dépensé", "Disponible", "Progression"]],
+      body: rubriqueData,
+      theme: "grid",
+      headStyles: { fillColor: [39, 174, 96] },
+      styles: { fontSize: 9 },
+    })
+
+    // Signatures
+    const finalY = doc.lastAutoTable.finalY + 30
+    doc.setFontSize(12)
+    doc.setFont("helvetica", "bold")
+    doc.text("LE DIRECTEUR", 150, finalY)
+    doc.text("LE COMPTABLE", 50, finalY)
+
+    // Télécharger le PDF
+    doc.save(`rapport-budget-${new Date().toISOString().split("T")[0]}.pdf`)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -157,7 +237,7 @@ export default function BudgetPage() {
                     <SelectItem value="2023">2023</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline">
+                <Button variant="outline" onClick={handleExportPDF}>
                   <Download className="w-4 h-4 mr-2" />
                   Export PDF
                 </Button>

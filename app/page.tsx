@@ -16,8 +16,8 @@ export default function HomePage() {
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">BudgetPro</h1>
-                <p className="text-xs text-gray-500">Gestion Budgétaire</p>
+                <h1 className="text-xl font-bold text-gray-900">CFED</h1>
+                <p className="text-xs text-gray-500">Formation Continue</p>
               </div>
             </div>
 
@@ -42,17 +42,17 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
             <Badge className="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-100">
-              Formation Continue des Enseignants
+              Centre de Formation et d'Échange à Distance
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Gestion Budgétaire
+              Plateforme Formation
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                Intelligente
+                Continue des Enseignants
               </span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Optimisez la gestion budgétaire de vos projets de formation avec notre solution complète. Suivi en temps
-              réel, rapports détaillés et workflow de validation intégrés.
+              Optimisez la gestion budgétaire de vos projets de formation continue des enseignants avec notre solution
+              complète. Suivi en temps réel, rapports détaillés et workflow de validation intégrés.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">
@@ -77,7 +77,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Fonctionnalités Principales</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Une solution complète pour la gestion budgétaire de vos projets de formation
+              Une solution complète pour la gestion budgétaire de vos projets de formation continue des enseignants
             </p>
           </div>
 
@@ -174,7 +174,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Prêt à Optimiser Votre Gestion Budgétaire ?</h2>
           <p className="text-lg text-gray-600 mb-8">
-            Rejoignez les équipes qui font confiance à BudgetPro pour gérer leurs projets de formation
+            Rejoignez les équipes qui font confiance au CFED pour gérer leurs projets de formation continue
           </p>
           <Link href="/login">
             <Button
@@ -195,9 +195,11 @@ export default function HomePage() {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold">BudgetPro</span>
+              <span className="text-xl font-bold">CFED</span>
             </div>
-            <div className="text-gray-400 text-sm">© 2024 BudgetPro. Tous droits réservés.</div>
+            <div className="text-gray-400 text-sm">
+              © 2024 Centre de Formation et d'Échange à Distance. Tous droits réservés.
+            </div>
           </div>
         </div>
       </footer>

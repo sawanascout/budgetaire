@@ -102,8 +102,8 @@ export default function LoginPage() {
               <BarChart3 className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">BudgetPro</h1>
-              <p className="text-sm text-gray-500">Gestion Budgétaire</p>
+              <h1 className="text-2xl font-bold text-gray-900">CFED</h1>
+              <p className="text-sm text-gray-500">Formation Continue</p>
             </div>
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function LoginPage() {
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-gray-900">Connexion</CardTitle>
-            <CardDescription>Accédez à votre espace de gestion budgétaire</CardDescription>
+            <CardDescription>Accédez à la plateforme de formation continue des enseignants</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -200,13 +200,13 @@ export default function LoginPage() {
                 {isLoading ? "Connexion..." : "Se connecter"}
               </Button>
             </form>
-
-           
           </CardContent>
         </Card>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-sm text-gray-500">© 2024 BudgetPro. Tous droits réservés.</div>
+        <div className="text-center mt-8 text-sm text-gray-500">
+          © 2024 Centre de Formation et d'Échange à Distance. Tous droits réservés.
+        </div>
       </div>
     </div>
   )
