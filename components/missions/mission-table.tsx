@@ -2,12 +2,20 @@
 
 import type React from "react"
 import jsPDF from "jspdf"
-import "jspdf-autotable"
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Eye, Edit, Trash2, Download } from "lucide-react"
+
+declare module "jspdf" {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF
+    lastAutoTable: {
+      finalY: number
+    }
+  }
+}
 
 type Mission = {
   id: number
@@ -95,7 +103,7 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
       ["Budget", "Exercice", "Compte Principal", "Sous Compte"],
       ["CFED", "2025", "65", "65010"],
     ]
-    ;(doc as any).autoTable({
+    doc.autoTable({
       startY: 145,
       head: [budgetData[0]],
       body: [budgetData[1]],
@@ -109,8 +117,8 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
       ["Montant", "Précompte", "Montant Net à Payer"],
       [formatMRU(mission.total), "0.00", formatMRU(mission.total)],
     ]
-    ;(doc as any).autoTable({
-      startY: (doc as any).lastAutoTable.finalY + 10,
+    doc.autoTable({
+      startY: doc.lastAutoTable.finalY + 10,
       head: [amountData[0]],
       body: [amountData[1]],
       theme: "grid",
@@ -123,7 +131,7 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
     })
 
     // Payment reason
-    const yPos = (doc as any).lastAutoTable.finalY + 15
+    const yPos = doc.lastAutoTable.finalY + 15
     doc.setFontSize(10)
     doc.setFont("helvetica", "bold")
     doc.text("Motif de règlement:", 20, yPos)
@@ -147,7 +155,7 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
       ["Arrêté le présent Ordre de Paiement à la somme de", "(en Ouguiya)"],
       ["Douze-mille", formatMRU(mission.total)],
     ]
-    ;(doc as any).autoTable({
+    doc.autoTable({
       startY: yPos + 60,
       head: [amountWordsData[0]],
       body: [amountWordsData[1]],
@@ -161,7 +169,7 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
     })
 
     // Signatures
-    const sigY = (doc as any).lastAutoTable.finalY + 30
+    const sigY = doc.lastAutoTable.finalY + 30
     doc.setFontSize(10)
     doc.setFont("helvetica", "bold")
 
