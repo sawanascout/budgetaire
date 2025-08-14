@@ -33,7 +33,8 @@ import {
   updateDocumentStatus,
 } from "./actions"
 import toast from "react-hot-toast"
-import html2pdf from "html2pdf.js"
+import jsPDF from "jspdf"
+import "jspdf-autotable"
 
 type Document = {
   id: number
@@ -153,349 +154,133 @@ export default function DocumentsPage() {
   }
 
   const handleExportDocuments = () => {
-    const pdfContent = `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Export Documents - CFED</title>
-        <style>
-          body { 
-            font-family: 'Times New Roman', serif; 
-            margin: 0; 
-            padding: 20px; 
-            background: white;
-            font-size: 12px;
-          }
-          .header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            border-bottom: 2px solid #2563eb;
-            padding-bottom: 15px;
-          }
-          .logo-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-          }
-          .logo-placeholder {
-            width: 60px;
-            height: 60px;
-            border: 2px solid #666;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #666;
-          }
-          .title { 
-            font-size: 20px; 
-            font-weight: bold; 
-            color: #1e40af;
-            margin: 15px 0;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 11px;
-          }
-          th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-          }
-          th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-          }
-          .stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-          }
-          .stat-item {
-            text-align: center;
-          }
-          .stat-number {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2563eb;
-          }
-          .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 10px;
-            color: #666;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="logo-section">
-          <div class="logo-placeholder">LOGO</div>
-          <div style="text-align: center; flex: 1;">
-            <div style="font-weight: bold; font-size: 14px;">République Islamique de Mauritanie</div>
-            <div style="font-size: 12px; margin: 5px 0;">Honneur - Fraternité - Justice</div>
-            <div style="font-size: 12px; font-weight: bold; margin-top: 10px;">
-              Centre de Formation et d'Échange à Distance (CFED)
-            </div>
-          </div>
-          <div class="logo-placeholder">CFED</div>
-        </div>
+    const doc = new jsPDF()
 
-        <div class="header">
-          <div class="title">RAPPORT D'EXPORT DES DOCUMENTS</div>
-          <div>Généré le ${new Date().toLocaleDateString("fr-FR", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}</div>
-        </div>
+    // Header with logos
+    doc.setFontSize(16)
+    doc.setFont("helvetica", "bold")
+    doc.text("République Islamique de Mauritanie", 105, 20, { align: "center" })
+    doc.setFontSize(12)
+    doc.setFont("helvetica", "normal")
+    doc.text("Honneur - Fraternité - Justice", 105, 28, { align: "center" })
+    doc.setFont("helvetica", "bold")
+    doc.text("Centre de Formation et d'Échange à Distance (CFED)", 105, 36, { align: "center" })
 
-        <div class="stats">
-          <div class="stat-item">
-            <div class="stat-number">${stats.total}</div>
-            <div>Total Documents</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">${stats.valides}</div>
-            <div>Validés</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">${stats.enAttente}</div>
-            <div>En Attente</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">${stats.rejetes}</div>
-            <div>Rejetés</div>
-          </div>
-        </div>
+    // Title
+    doc.setFontSize(18)
+    doc.setFont("helvetica", "bold")
+    doc.text("RAPPORT D'EXPORT DES DOCUMENTS", 105, 50, { align: "center" })
 
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Type</th>
-              <th>Catégorie</th>
-              <th>Statut</th>
-              <th>Mission</th>
-              <th>Rubrique</th>
-              <th>Date</th>
-              <th>Par</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${filteredDocuments
-              .map(
-                (doc) => `
-              <tr>
-                <td>${doc.nom}</td>
-                <td>${doc.type}</td>
-                <td>${doc.categorie}</td>
-                <td>${doc.statut}</td>
-                <td>${doc.mission?.nom || "Non assignée"}</td>
-                <td>${doc.rubrique?.nom || "Non assignée"}</td>
-                <td>${new Date(doc.createdAt).toLocaleDateString("fr-FR")}</td>
-                <td>${doc.par}</td>
-              </tr>
-            `,
-              )
-              .join("")}
-          </tbody>
-        </table>
+    // Date
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "normal")
+    doc.text(
+      `Généré le ${new Date().toLocaleDateString("fr-FR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`,
+      105,
+      58,
+      { align: "center" },
+    )
 
-        <div class="footer">
-          <p>Ce rapport a été généré automatiquement par le système de gestion documentaire du CFED</p>
-          <p>Centre de Formation et d'Échange à Distance - République Islamique de Mauritanie</p>
-        </div>
-      </body>
-      </html>
-    `
+    // Statistics
+    doc.setFontSize(12)
+    doc.setFont("helvetica", "bold")
+    doc.text("STATISTIQUES", 20, 75)
+    doc.setFont("helvetica", "normal")
+    doc.text(`Total Documents: ${stats.total}`, 20, 85)
+    doc.text(`Validés: ${stats.valides}`, 70, 85)
+    doc.text(`En Attente: ${stats.enAttente}`, 120, 85)
+    doc.text(`Rejetés: ${stats.rejetes}`, 170, 85)
 
-    const element = document.createElement("div")
-    element.innerHTML = pdfContent
-    html2pdf(element).save(`export_documents_${new Date().toISOString().split("T")[0]}.pdf`)
+    // Table data
+    const tableData = filteredDocuments.map((doc) => [
+      doc.nom,
+      doc.type,
+      doc.categorie,
+      doc.statut,
+      doc.mission?.nom || "Non assignée",
+      doc.rubrique?.nom || "Non assignée",
+      new Date(doc.createdAt).toLocaleDateString("fr-FR"),
+      doc.par,
+    ])
+
+    // Generate table
+    doc.autoTable({
+      head: [["Nom", "Type", "Catégorie", "Statut", "Mission", "Rubrique", "Date", "Par"]],
+      body: tableData,
+      startY: 95,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [37, 99, 235] },
+    })
+
+    // Footer
+    const finalY = doc.lastAutoTable.finalY + 20
+    doc.setFontSize(8)
+    doc.text("Ce rapport a été généré automatiquement par le système de gestion documentaire du CFED", 105, finalY, {
+      align: "center",
+    })
+    doc.text("Centre de Formation et d'Échange à Distance - République Islamique de Mauritanie", 105, finalY + 8, {
+      align: "center",
+    })
+
+    doc.save(`export_documents_${new Date().toISOString().split("T")[0]}.pdf`)
     toast.success("Export PDF réalisé avec succès !")
   }
 
   const handleViewDetails = (doc: Document) => {
-    const detailsContent = `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Détails Document - ${doc.nom}</title>
-        <style>
-          body { 
-            font-family: 'Times New Roman', serif; 
-            margin: 0; 
-            padding: 40px; 
-            background: white;
-            line-height: 1.6;
-          }
-          .header { 
-            text-align: center; 
-            margin-bottom: 40px; 
-            border-bottom: 3px solid #2563eb;
-            padding-bottom: 20px;
-          }
-          .logo-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-          }
-          .logo-placeholder {
-            width: 80px;
-            height: 80px;
-            border: 2px solid #666;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: #666;
-          }
-          .title { 
-            font-size: 24px; 
-            font-weight: bold; 
-            color: #1e40af;
-            margin: 20px 0;
-          }
-          .info-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 30px 0;
-          }
-          .info-table td {
-            padding: 12px;
-            border: 1px solid #d1d5db;
-          }
-          .info-table .label {
-            background-color: #f3f4f6;
-            font-weight: bold;
-            width: 200px;
-          }
-          .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            display: inline-block;
-          }
-          .status-valide { background-color: #dcfce7; color: #166534; }
-          .status-attente { background-color: #fef3c7; color: #92400e; }
-          .status-rejete { background-color: #fee2e2; color: #991b1b; }
-        </style>
-      </head>
-      <body>
-        <div class="logo-section">
-          <div class="logo-placeholder">LOGO</div>
-          <div style="text-align: center; flex: 1;">
-            <div style="font-weight: bold; font-size: 16px;">République Islamique de Mauritanie</div>
-            <div style="font-size: 14px; margin: 5px 0;">Honneur - Fraternité - Justice</div>
-            <div style="font-size: 14px; font-weight: bold; margin-top: 15px;">
-              Centre de Formation et d'Échange à Distance (CFED)
-            </div>
-          </div>
-          <div class="logo-placeholder">CFED</div>
-        </div>
+    const pdfDoc = new jsPDF()
 
-        <div class="header">
-          <div class="title">FICHE DÉTAILLÉE DU DOCUMENT</div>
-        </div>
+    // Header
+    pdfDoc.setFontSize(16)
+    pdfDoc.setFont("helvetica", "bold")
+    pdfDoc.text("République Islamique de Mauritanie", 105, 20, { align: "center" })
+    pdfDoc.setFontSize(12)
+    pdfDoc.setFont("helvetica", "normal")
+    pdfDoc.text("Honneur - Fraternité - Justice", 105, 28, { align: "center" })
+    pdfDoc.setFont("helvetica", "bold")
+    pdfDoc.text("Centre de Formation et d'Échange à Distance (CFED)", 105, 36, { align: "center" })
 
-        <table class="info-table">
-          <tr>
-            <td class="label">Nom du Document</td>
-            <td><strong>${doc.nom}</strong></td>
-          </tr>
-          <tr>
-            <td class="label">Type de Fichier</td>
-            <td>${doc.type}</td>
-          </tr>
-          <tr>
-            <td class="label">Catégorie</td>
-            <td>${doc.categorie}</td>
-          </tr>
-          <tr>
-            <td class="label">Statut</td>
-            <td>
-              <span class="status-badge ${
-                doc.statut === "Validé"
-                  ? "status-valide"
-                  : doc.statut === "En Attente"
-                    ? "status-attente"
-                    : "status-rejete"
-              }">
-                ${doc.statut}
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td class="label">Mission Associée</td>
-            <td>${doc.mission?.nom || "Non assignée"}</td>
-          </tr>
-          <tr>
-            <td class="label">Rubrique</td>
-            <td>${doc.rubrique?.nom || "Non assignée"}</td>
-          </tr>
-          <tr>
-            <td class="label">Date de Téléversement</td>
-            <td>${new Date(doc.createdAt).toLocaleDateString("fr-FR", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</td>
-          </tr>
-          <tr>
-            <td class="label">Téléversé par</td>
-            <td>${doc.par}</td>
-          </tr>
-          ${
-            doc.description
-              ? `
-          <tr>
-            <td class="label">Description</td>
-            <td>${doc.description}</td>
-          </tr>
-          `
-              : ""
-          }
-          <tr>
-            <td class="label">Chemin du Fichier</td>
-            <td style="font-family: monospace; font-size: 12px;">${doc.chemin}</td>
-          </tr>
-        </table>
+    // Title
+    pdfDoc.setFontSize(18)
+    pdfDoc.setFont("helvetica", "bold")
+    pdfDoc.text("CERTIFICAT DE VALIDATION DE DOCUMENT", 105, 55, { align: "center" })
 
-        <div style="margin-top: 60px; text-align: center; font-size: 12px; color: #6b7280;">
-          <p>Fiche générée automatiquement le ${new Date().toLocaleDateString("fr-FR", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}</p>
-          <p>Centre de Formation et d'Échange à Distance - République Islamique de Mauritanie</p>
-        </div>
-      </body>
-      </html>
-    `
+    // Document details
+    pdfDoc.setFontSize(12)
+    pdfDoc.setFont("helvetica", "normal")
+    let yPos = 80
 
-    const element = document.createElement("div")
-    element.innerHTML = detailsContent
-    html2pdf(element).save(`details_${doc.nom.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`)
-    toast.success("Détails du document téléchargés !")
+    pdfDoc.text(`Nom du document: ${doc.nom}`, 20, yPos)
+    yPos += 10
+    pdfDoc.text(`Type: ${doc.type}`, 20, yPos)
+    yPos += 10
+    pdfDoc.text(`Catégorie: ${doc.categorie}`, 20, yPos)
+    yPos += 10
+    pdfDoc.text(`Statut: ${doc.statut}`, 20, yPos)
+    yPos += 10
+    pdfDoc.text(`Mission: ${doc.mission?.nom || "Non assignée"}`, 20, yPos)
+    yPos += 10
+    pdfDoc.text(`Rubrique: ${doc.rubrique?.nom || "Non assignée"}`, 20, yPos)
+    yPos += 10
+    pdfDoc.text(`Téléversé le: ${new Date(doc.createdAt).toLocaleDateString("fr-FR")}`, 20, yPos)
+    yPos += 10
+    pdfDoc.text(`Par: ${doc.par}`, 20, yPos)
+    yPos += 10
+    pdfDoc.text(`Description: ${doc.description}`, 20, yPos)
+
+    // Signatures
+    yPos += 30
+    pdfDoc.text("POUR ACQUIT", 40, yPos)
+    pdfDoc.text("LE COMPTABLE", 105, yPos)
+    pdfDoc.text("LE DIRECTEUR", 170, yPos)
+
+    pdfDoc.save(`certificat_${doc.nom.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`)
+    toast.success("Certificat du document téléchargé !")
   }
 
   const handleDownloadDocument = (doc: Document) => {
