@@ -44,7 +44,7 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
     return new Date(dateString).toLocaleDateString("fr-FR")
   }
 
-  const downloadPaymentOrder = async (mission: Mission) => {
+  const downloadPaymentOrder = (mission: Mission) => {
     const doc = new jsPDF()
     const currentDate = new Date(mission.date)
       .toLocaleDateString("fr-FR", {
@@ -54,114 +54,113 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
       })
       .replace(/\//g, "-")
 
-    // Add header with logos
+    // Header avec texte arabe
     doc.setFontSize(12)
     doc.setFont("helvetica", "bold")
 
-    // Left logo placeholder
-    doc.circle(30, 30, 15)
-    doc.setFontSize(8)
-    doc.text("LOGO", 25, 32)
+    // Titre en arabe (الجمهورية الإسلامية الموريتانية)
+    doc.text("الجمهورية الإسلامية الموريتانية", 105, 15, { align: "center", lang: "ar" })
+    // Titre en français
+    doc.text("République Islamique de Mauritanie", 105, 22, { align: "center" })
 
-    // Right logo placeholder
-    doc.circle(180, 30, 15)
-    doc.text("CFED", 175, 32)
-
-    // Center header
+    // Devise en arabe (شرف - أخاء - عدل)
     doc.setFontSize(10)
-    doc.setFont("helvetica", "bold")
-    doc.text("جمهورية الإسلامية الموريتانية", 105, 20, { align: "center" })
-    doc.text("République Islamique de Mauritanie", 105, 28, { align: "center" })
-    doc.setFontSize(8)
-    doc.text("شرف - أخاء - عدل", 105, 35, { align: "center" })
-    doc.text("Honneur - Fraternité - Justice", 105, 42, { align: "center" })
+    doc.text("شرف - أخاء - عدل", 105, 29, { align: "center", lang: "ar" })
+    // Devise en français
+    doc.text("Honneur - Fraternité - Justice", 105, 36, { align: "center" })
 
-    // Organization name
+    // Nom de l'organisation en arabe (مركز التكوين والتبادل عن بعد)
+    doc.text("مركز التكوين والتبادل عن بعد", 105, 50, { align: "center", lang: "ar" })
+    // Nom de l'organisation en français
+    doc.text("Centre de Formation et d'Échange à Distance", 105, 57, { align: "center" })
+
+    // Titre du document
+    doc.setFontSize(14)
+    doc.setFont("helvetica", "bold")
+    doc.text(`ORDRE DE PAIEMENT ${mission.reference}/2025`, 105, 70, { align: "center" })
+
+    // Date et lieu
     doc.setFontSize(10)
-    doc.setFont("helvetica", "bold")
-    doc.text("Centre de Formation et d'Échange à Distance (CFED)", 105, 55, { align: "center" })
-    doc.setFontSize(8)
-    doc.text("مركز التكوين والتبادل عن بعد", 105, 62, { align: "center" })
-
-    // Title
-    doc.setFontSize(16)
-    doc.setFont("helvetica", "bold")
-    doc.text(`ORDRE DE PAIEMENT ${mission.reference}/2025`, 105, 80, { align: "center" })
-
-    // Date and location
-    doc.setFontSize(10)
-    doc.setFont("helvetica", "italic")
-    doc.text(`Nouakchott, le ${currentDate}`, 170, 95)
-
-    // Beneficiary section
-    doc.setFontSize(12)
-    doc.setFont("helvetica", "bold")
-    doc.text("Bénéficiaire", 20, 115)
     doc.setFont("helvetica", "normal")
-    doc.rect(20, 120, 170, 15)
-    doc.text(mission.nomMissionnaire, 25, 130)
+    doc.text(`Nouakchott, le ${currentDate}`, 170, 80)
 
-    // Budget table
-    const budgetData = [
-      ["Budget", "Exercice", "Compte Principal", "Sous Compte"],
-      ["CFED", "2025", "65", "65010"],
-    ]
-    doc.autoTable({
-      startY: 145,
-      head: [budgetData[0]],
-      body: [budgetData[1]],
+    // Bénéficiaire
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "bold")
+    doc.text("Bénéficiaire", 20, 95)
+    doc.setFont("helvetica", "normal")
+    doc.rect(20, 100, 170, 10)
+    doc.text(mission.nomMissionnaire, 25, 107)
+
+    // Tableau Budget
+    autoTable(doc, {
+      startY: 120,
+      head: [["Budget", "Exercice", "Compte Principal", "Sous Compte"]],
+      body: [["CFED", "2025", "65", "65010"]],
       theme: "grid",
-      styles: { fontSize: 10, cellPadding: 5 },
-      headStyles: { fillColor: [248, 249, 250], textColor: [0, 0, 0] },
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+        cellWidth: "wrap",
+      },
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontStyle: "bold",
+      },
+      margin: { left: 20 },
     })
 
-    // Amount section
-    const amountData = [
-      ["Montant", "Précompte", "Montant Net à Payer"],
-      [formatMRU(mission.total), "0.00", formatMRU(mission.total)],
-    ]
-    doc.autoTable({
+    // Tableau Montant
+    autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 10,
       head: [["Montant", "Précompte", "Montant Net à Payer"]],
       body: [[formatMRU(mission.total), "0,00", formatMRU(mission.total)]],
       theme: "grid",
-      styles: { fontSize: 10, cellPadding: 5 },
-      headStyles: { fillColor: [248, 249, 250], textColor: [0, 0, 0] },
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontStyle: "bold",
+      },
       columnStyles: {
         0: { fontStyle: "bold" },
         2: { fontStyle: "bold" },
       },
+      margin: { left: 20 },
     })
 
-    // Payment reason
+    // Motif de règlement
     const yPos = doc.lastAutoTable.finalY + 15
     doc.setFontSize(10)
     doc.setFont("helvetica", "bold")
-    doc.text("Motif de règlement:", 20, yPos)
+    doc.text("Motif de règlement", 20, yPos)
     doc.setFont("helvetica", "normal")
-    const motif = `RÈGLEMENT HONORAIRE AIDE COMPTABLE CFED MOIS DE ${new Date(mission.date).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }).toUpperCase()}`
-    doc.text(motif, 20, yPos + 8, { maxWidth: 170 })
+    const month = new Date(mission.date).toLocaleDateString("fr-FR", { month: "long" }).toUpperCase()
+    const year = new Date(mission.date).getFullYear()
+    doc.text(`RÈGLEMENT HONORAIRE AIDE COMPTABLE CFED MOIS DE ${month} ${year}`, 20, yPos + 7, { maxWidth: 170 })
 
-    // Payment mode
-    doc.setFontSize(14)
+    // Mode de paiement
+    doc.setFontSize(12)
     doc.setFont("helvetica", "bold")
-    doc.rect(20, yPos + 25, 170, 20)
-    doc.text("MODE DE PAIEMENT", 105, yPos + 32, { align: "center" })
-    doc.text(mission.modePaiement, 105, yPos + 40, { align: "center" })
+    doc.text("MODE DE PAIEMENT", 20, yPos + 25)
+
+    doc.setFont("helvetica", "normal")
+    doc.rect(20, yPos + 30, 170, 10)
+    doc.text(mission.modePaiement, 25, yPos + 37)
 
     if (mission.modePaiement === "Chèque") {
-      doc.text(`Chèque N° ${mission.reference}`, 105, yPos + 48, { align: "center" })
+      doc.text(`Chèque N° ${mission.reference}`, 25, yPos + 47)
     }
 
-    // Amount in words
-    const amountWordsData = [
-      ["Arrêté le présent Ordre de Paiement à la somme de", "(en Ouguiya)"],
-      ["Douze-mille", formatMRU(mission.total)],
-    ]
-    doc.autoTable({
+    // Montant en lettres
+    autoTable(doc, {
       startY: yPos + 60,
-      head: [amountWordsData[0]],
-      body: [amountWordsData[1]],
+      head: [["Arrêté le présent Ordre de Paiement à la somme de", "(en Ouguiya)"]],
+      body: [[`${convertNumberToWords(mission.total)}`, formatMRU(mission.total)]],
       theme: "grid",
       styles: {
         fontSize: 10,
@@ -174,12 +173,13 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
       },
       columnStyles: {
         0: { cellWidth: 120 },
-        1: { cellWidth: 50, halign: "center", fontStyle: "bold" },
+        1: { cellWidth: 50, halign: "center" },
       },
+      margin: { left: 20 },
     })
 
     // Signatures
-    const sigY = doc.lastAutoTable.finalY + 30
+    const sigY = doc.lastAutoTable.finalY + 20
     doc.setFontSize(10)
     doc.setFont("helvetica", "bold")
 
@@ -187,16 +187,16 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
     doc.text("LE COMPTABLE", 105, sigY, { align: "center" })
     doc.text("LE DIRECTEUR", 175, sigY, { align: "center" })
 
-    // Signature lines
-    doc.line(20, sigY + 25, 50, sigY + 25)
-    doc.line(90, sigY + 25, 120, sigY + 25)
-    doc.line(160, sigY + 25, 190, sigY + 25)
+    doc.line(20, sigY + 10, 50, sigY + 10)
+    doc.line(90, sigY + 10, 120, sigY + 10)
+    doc.line(160, sigY + 10, 190, sigY + 10)
 
-    // Save the PDF
-    const fileName = `CFED_Ordre_Paiement_${mission.reference}_${new Date().toISOString().split("T")[0]}.pdf`
+    // Enregistrer le PDF
+    const fileName = `Ordre_Paiement_${mission.reference}.pdf`
     doc.save(fileName)
   }
 
+  // Helper function to convert number to words in French
   function convertNumberToWords(num: number): string {
     const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"]
     const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"]
