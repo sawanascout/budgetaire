@@ -8,7 +8,7 @@ import { BarChart3, TrendingUp, DollarSign, Download } from "lucide-react"
 import { getBudgetData } from "./actions"
 import { DashboardHeader } from "@/components/dashboard-header"
 import jsPDF from "jspdf"
-import "jspdf-autotable"
+import autoTable from "jspdf-autotable"
 
 type BudgetStats = {
   budgetAlloue: number
@@ -107,7 +107,7 @@ export default function BudgetPage() {
 
     // Date
     doc.setFontSize(10)
-    doc.text(`Généré le: ${new Date().toLocaleDateString("fr-FR")}`, 20, 90)
+    doc.text(`Nouakchott, le ${new Date().toLocaleDateString("fr-FR")}`, 20, 90)
 
     // Statistiques principales
     doc.setFontSize(14)
@@ -121,7 +121,7 @@ export default function BudgetPage() {
       ["Taux de Consommation", `${((stats.depensesEffectuees / stats.budgetAlloue) * 100).toFixed(1)}%`],
     ]
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 120,
       head: [["Indicateur", "Valeur"]],
       body: statsData,
@@ -133,7 +133,7 @@ export default function BudgetPage() {
     // Budget par rubrique
     doc.setFontSize(14)
     doc.setFont("helvetica", "bold")
-    doc.text("BUDGET PAR RUBRIQUE", 20, doc.lastAutoTable.finalY + 20)
+    doc.text("BUDGET PAR RUBRIQUE", 20, (doc as any).lastAutoTable.finalY + 20)
 
     const rubriqueData = rubriques.map((rubrique) => [
       rubrique.nom,
@@ -143,8 +143,8 @@ export default function BudgetPage() {
       `${rubrique.progression.toFixed(1)}%`,
     ])
 
-    doc.autoTable({
-      startY: doc.lastAutoTable.finalY + 30,
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 30,
       head: [["Rubrique", "Budget Alloué", "Dépensé", "Disponible", "Progression"]],
       body: rubriqueData,
       theme: "grid",
@@ -153,14 +153,16 @@ export default function BudgetPage() {
     })
 
     // Signatures
-    const finalY = doc.lastAutoTable.finalY + 30
+    const finalY = (doc as any).lastAutoTable.finalY + 30
     doc.setFontSize(12)
     doc.setFont("helvetica", "bold")
     doc.text("LE DIRECTEUR", 150, finalY)
     doc.text("LE COMPTABLE", 50, finalY)
 
     // Télécharger le PDF
-    doc.save(`rapport-budget-${new Date().toISOString().split("T")[0]}.pdf`)
+    const currentDate = new Date().toISOString().split("T")[0]
+    const fileName = `CFED_Rapport_Suivi_Budgetaire_${currentDate}.pdf`
+    doc.save(fileName)
   }
 
   if (loading) {

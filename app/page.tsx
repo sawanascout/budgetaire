@@ -198,7 +198,7 @@ export default function HomePage() {
               <span className="text-xl font-bold">CFED</span>
             </div>
             <div className="text-gray-400 text-sm">
-              © 2024 Centre de Formation et d'Échange à Distance. Tous droits réservés.
+              © 2025 Centre de Formation et d'Échange à Distance. Tous droits réservés.
             </div>
           </div>
         </div>

@@ -205,7 +205,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-sm text-gray-500">
-          © 2024 Centre de Formation et d'Échange à Distance. Tous droits réservés.
+          © 2025 Centre de Formation et d'Échange à Distance. Tous droits réservés.
         </div>
       </div>
     </div>
