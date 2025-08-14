@@ -17,20 +17,40 @@ export async function initializeAdmin() {
 
     console.log("🔧 Initialisation du compte administrateur...")
 
-    // Créer le rôle Administrateur s'il n'existe pas
-    let adminRole = await prisma.role.findFirst({
-      where: { nom: "Administrateur" },
-    })
+    const defaultRoles = [
+      {
+        nom: "Administrateur",
+        description: "Accès complet à toutes les fonctionnalités du système",
+      },
+      {
+        nom: "Comptable",
+        description: "Gestion complète des finances, budgets et ordres de paiement",
+      },
+      {
+        nom: "Assistant Comptable",
+        description: "Assistance dans la gestion financière et saisie des données comptables",
+      },
+    ]
 
-    if (!adminRole) {
-      adminRole = await prisma.role.create({
-        data: {
-          nom: "Administrateur",
-          description: "Accès complet à toutes les fonctionnalités du système",
-        },
+    const createdRoles = []
+
+    for (const roleData of defaultRoles) {
+      let role = await prisma.role.findFirst({
+        where: { nom: roleData.nom },
       })
-      console.log("✅ Rôle Administrateur créé")
+
+      if (!role) {
+        role = await prisma.role.create({
+          data: roleData,
+        })
+        console.log(`✅ Rôle ${roleData.nom} créé`)
+      }
+
+      createdRoles.push(role)
     }
+
+    // Récupérer le rôle Administrateur pour l'assigner à l'admin
+    const adminRole = createdRoles.find((role) => role.nom === "Administrateur")
 
     // Hacher le mot de passe
     const hashedPassword = await bcrypt.hash("admin123", 10)
@@ -43,7 +63,7 @@ export async function initializeAdmin() {
         email: "admin@gestionbudget.com",
         motDePasse: hashedPassword,
         roles: {
-          connect: { id: adminRole.id },
+          connect: { id: adminRole!.id },
         },
       },
       include: {

@@ -77,7 +77,7 @@ export default function UtilisateursPage() {
   const administrateurs = utilisateurs.filter((u) => u.roles.some((r) => r.nom === "Administrateur")).length
   const connexionsAujourdhui = Math.floor(utilisateursActifs * 0.75) // Simulation
 
-  const roles = ["Tous", "Administrateur", "Comptable", "Assistant"]
+  const roles = ["Tous", "Administrateur", "Comptable", "Assistant Comptable"]
 
   if (isLoading) {
     return (
