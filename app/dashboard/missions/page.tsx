@@ -15,6 +15,8 @@ import { MissionTable } from "@/components/missions/mission-table"
 import { getMissions, getMissionStats, createMission, updateMission, deleteMission } from "./actions"
 import { getCurrentUser, logoutUser } from "@/app/dashboard/utilisateurs/auth-actions"
 import { useToast } from "@/hooks/use-toast"
+import jsPDF from "jspdf"
+import "jspdf-autotable"
 
 // Navigation tabs
 const navigationTabs = [
@@ -144,184 +146,92 @@ export default function MissionsPage() {
   }
 
   const handleExportMissions = () => {
-    const pdfContent = `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Export Missions - CFED</title>
-        <style>
-          body { 
-            font-family: 'Times New Roman', serif; 
-            margin: 0; 
-            padding: 20px; 
-            background: white;
-            font-size: 12px;
-          }
-          .header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            border-bottom: 2px solid #2563eb;
-            padding-bottom: 15px;
-          }
-          .logo-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-          }
-          .logo-placeholder {
-            width: 60px;
-            height: 60px;
-            border: 2px solid #666;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #666;
-          }
-          .title { 
-            font-size: 20px; 
-            font-weight: bold; 
-            color: #1e40af;
-            margin: 15px 0;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 11px;
-          }
-          th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-          }
-          th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-          }
-          .stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-          }
-          .stat-item {
-            text-align: center;
-          }
-          .stat-number {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2563eb;
-          }
-          .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 10px;
-            color: #666;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="logo-section">
-          <div class="logo-placeholder">LOGO</div>
-          <div style="text-align: center; flex: 1;">
-            <div style="font-weight: bold; font-size: 14px;">République Islamique de Mauritanie</div>
-            <div style="font-size: 12px; margin: 5px 0;">Honneur - Fraternité - Justice</div>
-            <div style="font-size: 12px; font-weight: bold; margin-top: 10px;">
-              Centre de Formation et d'Échange à Distance (CFED)
-            </div>
-          </div>
-          <div class="logo-placeholder">CFED</div>
-        </div>
+    const doc = new jsPDF()
 
-        <div class="header">
-          <div class="title">RAPPORT D'EXPORT DES MISSIONS</div>
-          <div>Généré le ${new Date().toLocaleDateString("fr-FR", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}</div>
-        </div>
+    // Header with logos
+    doc.setFontSize(16)
+    doc.setFont("helvetica", "bold")
+    doc.text("République Islamique de Mauritanie", 105, 20, { align: "center" })
+    doc.setFontSize(12)
+    doc.setFont("helvetica", "normal")
+    doc.text("Honneur - Fraternité - Justice", 105, 28, { align: "center" })
+    doc.setFont("helvetica", "bold")
+    doc.text("Centre de Formation et d'Échange à Distance (CFED)", 105, 36, { align: "center" })
 
-        <div class="stats">
-          <div class="stat-item">
-            <div class="stat-number">${stats.totalMissions}</div>
-            <div>Total Missions</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">${stats.missionsActives}</div>
-            <div>Missions Actives</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">${stats.missionsTerminees}</div>
-            <div>Missions Terminées</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">${formatMRU(stats.budgetTotal)}</div>
-            <div>Budget Total</div>
-          </div>
-        </div>
+    // Title
+    doc.setFontSize(18)
+    doc.setFont("helvetica", "bold")
+    doc.text("RAPPORT D'EXPORT DES MISSIONS", 105, 50, { align: "center" })
 
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Missionnaire</th>
-              <th>Montant/Jour</th>
-              <th>Jours</th>
-              <th>Total</th>
-              <th>Mode Paiement</th>
-              <th>Référence</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${filteredMissions
-              .map(
-                (mission) => `
-              <tr>
-                <td>${new Date(mission.date).toLocaleDateString("fr-FR")}</td>
-                <td>${mission.nomMissionnaire}</td>
-                <td>${formatMRU(mission.montantParJour)}</td>
-                <td>${mission.nombreJours}</td>
-                <td>${formatMRU(mission.total)}</td>
-                <td>${mission.modePaiement}</td>
-                <td>${mission.reference}</td>
-                <td>${mission.statut}</td>
-              </tr>
-            `,
-              )
-              .join("")}
-          </tbody>
-        </table>
+    // Date
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "normal")
+    doc.text(
+      `Généré le ${new Date().toLocaleDateString("fr-FR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`,
+      105,
+      58,
+      { align: "center" },
+    )
 
-        <div class="footer">
-          <p>Ce rapport a été généré automatiquement par le système de gestion des missions du CFED</p>
-          <p>Centre de Formation et d'Échange à Distance - République Islamique de Mauritanie</p>
-        </div>
-      </body>
-      </html>
-    `
+    // Statistics
+    doc.setFontSize(12)
+    doc.setFont("helvetica", "bold")
+    doc.text("STATISTIQUES", 20, 75)
+    doc.setFont("helvetica", "normal")
+    doc.text(`Total Missions: ${stats.totalMissions}`, 20, 85)
+    doc.text(`Missions Actives: ${stats.missionsActives}`, 70, 85)
+    doc.text(`Missions Terminées: ${stats.missionsTerminees}`, 120, 85)
+    doc.text(`Budget Total: ${formatMRU(stats.budgetTotal)}`, 170, 85)
 
-    const element = document.createElement("div")
-    element.innerHTML = pdfContent
-    const blob = new Blob([pdfContent], { type: "text/html" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `export_missions_${new Date().toISOString().split("T")[0]}.html`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    // Table data
+    const tableData = missions
+      .filter((mission) => {
+        const matchesSearch =
+          mission.nomMissionnaire.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          mission.reference.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesStatus = statusFilter === "all" || mission.statut.toLowerCase() === statusFilter.toLowerCase()
+        return matchesSearch && matchesStatus
+      })
+      .map((mission) => [
+        new Date(mission.date).toLocaleDateString("fr-FR"),
+        mission.nomMissionnaire,
+        formatMRU(mission.montantParJour),
+        mission.nombreJours.toString(),
+        formatMRU(mission.total),
+        mission.modePaiement,
+        mission.reference,
+        mission.statut,
+      ])
+
+    // Generate table
+    ;(doc as any).autoTable({
+      head: [["Date", "Missionnaire", "Montant/Jour", "Jours", "Total", "Mode Paiement", "Référence", "Statut"]],
+      body: tableData,
+      startY: 95,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [37, 99, 235] },
+    })
+
+    // Footer
+    const finalY = (doc as any).lastAutoTable.finalY + 20
+    doc.setFontSize(8)
+    doc.text("Ce rapport a été généré automatiquement par le système de gestion des missions du CFED", 105, finalY, {
+      align: "center",
+    })
+    doc.text("Centre de Formation et d'Échange à Distance - République Islamique de Mauritanie", 105, finalY + 8, {
+      align: "center",
+    })
+
+    // Save with explicit filename
+    const currentDate = new Date().toISOString().split("T")[0]
+    doc.save(`CFED_Rapport_Missions_${currentDate}.pdf`)
+
     toast({
       title: "Succès",
       description: "Export PDF des missions réalisé avec succès !",
@@ -389,14 +299,6 @@ export default function MissionsPage() {
       }
     }
   }
-
-  const filteredMissions = missions.filter((mission) => {
-    const matchesSearch =
-      mission.nomMissionnaire.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mission.reference.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || mission.statut.toLowerCase() === statusFilter.toLowerCase()
-    return matchesSearch && matchesStatus
-  })
 
   const getStatusBadge = (statut: string) => {
     switch (statut.toLowerCase()) {
@@ -611,7 +513,7 @@ export default function MissionsPage() {
         <Card className="bg-white shadow-sm">
           <CardContent className="p-0">
             <MissionTable
-              missions={filteredMissions}
+              missions={missions}
               onEdit={handleEditMission}
               onView={handleViewDetails}
               onDelete={handleDeleteMission}
