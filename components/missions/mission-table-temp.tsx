@@ -44,7 +44,7 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
     return new Date(dateString).toLocaleDateString("fr-FR")
   }
 
-  const downloadPaymentOrder = async (mission: Mission) => {
+  const downloadPaymentOrder = (mission: Mission) => {
     const doc = new jsPDF()
     const currentDate = new Date(mission.date)
       .toLocaleDateString("fr-FR", {
@@ -54,77 +54,64 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
       })
       .replace(/\//g, "-")
 
-    // Header with logo placeholders
+    // Header avec texte arabe
     doc.setFontSize(12)
     doc.setFont("helvetica", "bold")
 
-    // Logo placeholders - left and right
-    doc.rect(15, 15, 25, 25) // Left logo placeholder
-    doc.text("LOGO", 27.5, 30, { align: "center" })
+    // Titre en arabe (الجمهورية الإسلامية الموريتانية)
+    doc.text("الجمهورية الإسلامية الموريتانية", 105, 15, { align: "center", lang: "ar" })
+    // Titre en français
+    doc.text("République Islamique de Mauritanie", 105, 22, { align: "center" })
 
-    doc.rect(160, 15, 25, 25) // Right logo placeholder
-    doc.text("LOGO", 172.5, 30, { align: "center" })
-
-    // Main header text - centered
-    doc.setFontSize(11)
-    doc.text("الجمهورية الإسلامية الموريتانية", 105, 20, { align: "center" })
+    // Devise en arabe (شرف - أخاء - عدل)
     doc.setFontSize(10)
-    doc.text("République Islamique de Mauritanie", 105, 27, { align: "center" })
-    doc.setFontSize(9)
-    doc.text("شرف - أخاء - عدل", 105, 33, { align: "center" })
-    doc.text("Honneur - Fraternité - Justice", 105, 38, { align: "center" })
+    doc.text("شرف - أخاء - عدل", 105, 29, { align: "center", lang: "ar" })
+    // Devise en français
+    doc.text("Honneur - Fraternité - Justice", 105, 36, { align: "center" })
 
-    // Institution names
-    doc.setFontSize(10)
-    doc.text("Centre de Formation et d'Échange à Distance (CFED)", 15, 50)
-    doc.text("مركز التكوين والتبادل عن بعد", 160, 50, { align: "right" })
+    // Nom de l'organisation en arabe (مركز التكوين والتبادل عن بعد)
+    doc.text("مركز التكوين والتبادل عن بعد", 105, 50, { align: "center", lang: "ar" })
+    // Nom de l'organisation en français
+    doc.text("Centre de Formation et d'Échange à Distance", 105, 57, { align: "center" })
 
-    // Horizontal line under header
-    doc.line(15, 55, 195, 55)
-
-    // Document title
-    doc.setFontSize(16)
+    // Titre du document
+    doc.setFontSize(14)
     doc.setFont("helvetica", "bold")
     doc.text(`ORDRE DE PAIEMENT ${mission.reference}/2025`, 105, 70, { align: "center" })
 
-    // Date and location
+    // Date et lieu
     doc.setFontSize(10)
     doc.setFont("helvetica", "normal")
-    doc.text(`Nouakchott, le ${currentDate}`, 160, 85)
+    doc.text(`Nouakchott, le ${currentDate}`, 170, 80)
 
-    // Beneficiary section
-    doc.setFontSize(11)
+    // Bénéficiaire
+    doc.setFontSize(10)
     doc.setFont("helvetica", "bold")
-    doc.text("Bénéficiaire", 105, 100, { align: "center" })
-
-    // Beneficiary box
-    doc.rect(15, 105, 180, 12)
+    doc.text("Bénéficiaire", 20, 95)
     doc.setFont("helvetica", "normal")
-    doc.setFontSize(10)
-    doc.text(mission.nomMissionnaire.toUpperCase(), 105, 113, { align: "center" })
+    doc.rect(20, 100, 170, 10)
+    doc.text(mission.nomMissionnaire, 25, 107)
 
-    // Budget information table
+    // Tableau Budget
     autoTable(doc, {
-      startY: 125,
+      startY: 120,
       head: [["Budget", "Exercice", "Compte Principal", "Sous Compte"]],
       body: [["CFED", "2025", "65", "65010"]],
       theme: "grid",
       styles: {
         fontSize: 10,
-        cellPadding: 2,
-        halign: "center",
+        cellPadding: 3,
+        cellWidth: "wrap",
       },
       headStyles: {
         fillColor: [255, 255, 255],
         textColor: [0, 0, 0],
         fontStyle: "bold",
-        halign: "center",
       },
-      margin: { left: 15, right: 15 },
-      tableWidth: 180,
+      margin: { left: 20 },
     })
 
-    // Amount information table
+    // Tableau Montant
     autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 10,
       head: [["Montant", "Précompte", "Montant Net à Payer"]],
@@ -132,53 +119,46 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
       theme: "grid",
       styles: {
         fontSize: 10,
-        cellPadding: 2,
-        halign: "center",
+        cellPadding: 3,
       },
       headStyles: {
         fillColor: [255, 255, 255],
         textColor: [0, 0, 0],
         fontStyle: "bold",
-        halign: "center",
       },
       columnStyles: {
         0: { fontStyle: "bold" },
         2: { fontStyle: "bold" },
       },
-      margin: { left: 15, right: 15 },
-      tableWidth: 180,
+      margin: { left: 20 },
     })
 
-    // Payment reason
+    // Motif de règlement
     const yPos = doc.lastAutoTable.finalY + 15
     doc.setFontSize(10)
     doc.setFont("helvetica", "bold")
-    doc.text("Motif de règlement", 15, yPos)
-
+    doc.text("Motif de règlement", 20, yPos)
     doc.setFont("helvetica", "normal")
     const month = new Date(mission.date).toLocaleDateString("fr-FR", { month: "long" }).toUpperCase()
     const year = new Date(mission.date).getFullYear()
-    doc.text(`RÈGLEMENT HONORAIRE AIDE COMPTABLE CFED MOIS DE`, 60, yPos)
-    doc.text(`${month} ${year}`, 60, yPos + 7)
+    doc.text(`RÈGLEMENT HONORAIRE AIDE COMPTABLE CFED MOIS DE ${month} ${year}`, 20, yPos + 7, { maxWidth: 170 })
 
-    // Payment method section
-    doc.setFontSize(14)
+    // Mode de paiement
+    doc.setFontSize(12)
     doc.setFont("helvetica", "bold")
-    doc.text("MODE DE PAIEMENT", 105, yPos + 25, { align: "center" })
+    doc.text("MODE DE PAIEMENT", 20, yPos + 25)
 
-    // Payment method details
-    doc.setFontSize(10)
     doc.setFont("helvetica", "normal")
-    doc.text(`${mission.modePaiement.toUpperCase()}`, 15, yPos + 40)
+    doc.rect(20, yPos + 30, 170, 10)
+    doc.text(mission.modePaiement, 25, yPos + 37)
 
-    if (mission.modePaiement.toLowerCase().includes("chèque")) {
-      doc.text(`Chèque N°`, 120, yPos + 40)
-      doc.text(`${mission.reference}001`, 150, yPos + 40)
+    if (mission.modePaiement === "Chèque") {
+      doc.text(`Chèque N° ${mission.reference}`, 25, yPos + 47)
     }
 
-    // Amount in words section
+    // Montant en lettres
     autoTable(doc, {
-      startY: yPos + 50,
+      startY: yPos + 60,
       head: [["Arrêté le présent Ordre de Paiement à la somme de", "(en Ouguiya)"]],
       body: [[`${convertNumberToWords(mission.total)}`, formatMRU(mission.total)]],
       theme: "grid",
@@ -192,31 +172,31 @@ export function MissionTable({ missions, onEdit, onView, onDelete, getStatusBadg
         fontStyle: "bold",
       },
       columnStyles: {
-        0: { cellWidth: 130 },
-        1: { cellWidth: 50, halign: "center", fontStyle: "bold" },
+        0: { cellWidth: 120 },
+        1: { cellWidth: 50, halign: "center" },
       },
-      margin: { left: 15, right: 15 },
+      margin: { left: 20 },
     })
 
-    // Signature sections
-    const sigY = doc.lastAutoTable.finalY + 30
-    doc.setFontSize(11)
+    // Signatures
+    const sigY = doc.lastAutoTable.finalY + 20
+    doc.setFontSize(10)
     doc.setFont("helvetica", "bold")
 
     doc.text("POUR ACQUIT", 35, sigY, { align: "center" })
     doc.text("LE COMPTABLE", 105, sigY, { align: "center" })
     doc.text("LE DIRECTEUR", 175, sigY, { align: "center" })
 
-    // Signature lines
-    doc.line(15, sigY + 25, 55, sigY + 25)
-    doc.line(85, sigY + 25, 125, sigY + 25)
-    doc.line(155, sigY + 25, 195, sigY + 25)
+    doc.line(20, sigY + 10, 50, sigY + 10)
+    doc.line(90, sigY + 10, 120, sigY + 10)
+    doc.line(160, sigY + 10, 190, sigY + 10)
 
-    // Save PDF with explicit filename
-    const fileName = `CFED_Ordre_Paiement_${mission.reference}_${new Date().toISOString().split("T")[0]}.pdf`
+    // Enregistrer le PDF
+    const fileName = `Ordre_Paiement_${mission.reference}.pdf`
     doc.save(fileName)
   }
 
+  // Helper function to convert number to words in French
   function convertNumberToWords(num: number): string {
     const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"]
     const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"]
