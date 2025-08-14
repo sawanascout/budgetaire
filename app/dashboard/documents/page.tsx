@@ -33,6 +33,7 @@ import {
   updateDocumentStatus,
 } from "./actions"
 import toast from "react-hot-toast"
+import html2pdf from "html2pdf.js"
 
 type Document = {
   id: number
@@ -152,39 +153,364 @@ export default function DocumentsPage() {
   }
 
   const handleExportDocuments = () => {
-    const csvContent = [
-      ["Nom", "Type", "Catégorie", "Statut", "Mission", "Rubrique", "Date de téléversement", "Par", "Description"].join(
-        ",",
-      ),
-      ...documents.map((doc) =>
-        [
-          `"${doc.nom}"`,
-          `"${doc.type}"`,
-          `"${doc.categorie}"`,
-          `"${doc.statut}"`,
-          `"${doc.mission?.nom || "Non assignée"}"`,
-          `"${doc.rubrique?.nom || "Non assignée"}"`,
-          `"${new Date(doc.createdAt).toLocaleDateString("fr-FR", {
+    const pdfContent = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Export Documents - CFED</title>
+        <style>
+          body { 
+            font-family: 'Times New Roman', serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: white;
+            font-size: 12px;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 15px;
+          }
+          .logo-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+          }
+          .logo-placeholder {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #666;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #666;
+          }
+          .title { 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #1e40af;
+            margin: 15px 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+          }
+          .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+          }
+          .stat-item {
+            text-align: center;
+          }
+          .stat-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2563eb;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="logo-section">
+          <div class="logo-placeholder">LOGO</div>
+          <div style="text-align: center; flex: 1;">
+            <div style="font-weight: bold; font-size: 14px;">République Islamique de Mauritanie</div>
+            <div style="font-size: 12px; margin: 5px 0;">Honneur - Fraternité - Justice</div>
+            <div style="font-size: 12px; font-weight: bold; margin-top: 10px;">
+              Centre de Formation et d'Échange à Distance (CFED)
+            </div>
+          </div>
+          <div class="logo-placeholder">CFED</div>
+        </div>
+
+        <div class="header">
+          <div class="title">RAPPORT D'EXPORT DES DOCUMENTS</div>
+          <div>Généré le ${new Date().toLocaleDateString("fr-FR", {
             year: "numeric",
             month: "long",
             day: "numeric",
-          })}"`,
-          `"${doc.par}"`,
-          `"${doc.description || ""}"`,
-        ].join(","),
-      ),
-    ].join("\n")
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</div>
+        </div>
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
-    link.setAttribute("href", url)
-    link.setAttribute("download", `documents_export_${new Date().toISOString().split("T")[0]}.csv`)
-    link.style.visibility = "hidden"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    toast.success("Export réalisé avec succès !")
+        <div class="stats">
+          <div class="stat-item">
+            <div class="stat-number">${stats.total}</div>
+            <div>Total Documents</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">${stats.valides}</div>
+            <div>Validés</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">${stats.enAttente}</div>
+            <div>En Attente</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">${stats.rejetes}</div>
+            <div>Rejetés</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Type</th>
+              <th>Catégorie</th>
+              <th>Statut</th>
+              <th>Mission</th>
+              <th>Rubrique</th>
+              <th>Date</th>
+              <th>Par</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredDocuments
+              .map(
+                (doc) => `
+              <tr>
+                <td>${doc.nom}</td>
+                <td>${doc.type}</td>
+                <td>${doc.categorie}</td>
+                <td>${doc.statut}</td>
+                <td>${doc.mission?.nom || "Non assignée"}</td>
+                <td>${doc.rubrique?.nom || "Non assignée"}</td>
+                <td>${new Date(doc.createdAt).toLocaleDateString("fr-FR")}</td>
+                <td>${doc.par}</td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p>Ce rapport a été généré automatiquement par le système de gestion documentaire du CFED</p>
+          <p>Centre de Formation et d'Échange à Distance - République Islamique de Mauritanie</p>
+        </div>
+      </body>
+      </html>
+    `
+
+    const element = document.createElement("div")
+    element.innerHTML = pdfContent
+    html2pdf(element).save(`export_documents_${new Date().toISOString().split("T")[0]}.pdf`)
+    toast.success("Export PDF réalisé avec succès !")
+  }
+
+  const handleViewDetails = (doc: Document) => {
+    const detailsContent = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Détails Document - ${doc.nom}</title>
+        <style>
+          body { 
+            font-family: 'Times New Roman', serif; 
+            margin: 0; 
+            padding: 40px; 
+            background: white;
+            line-height: 1.6;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+          }
+          .logo-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+          }
+          .logo-placeholder {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #666;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+          }
+          .title { 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #1e40af;
+            margin: 20px 0;
+          }
+          .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+          }
+          .info-table td {
+            padding: 12px;
+            border: 1px solid #d1d5db;
+          }
+          .info-table .label {
+            background-color: #f3f4f6;
+            font-weight: bold;
+            width: 200px;
+          }
+          .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+          }
+          .status-valide { background-color: #dcfce7; color: #166534; }
+          .status-attente { background-color: #fef3c7; color: #92400e; }
+          .status-rejete { background-color: #fee2e2; color: #991b1b; }
+        </style>
+      </head>
+      <body>
+        <div class="logo-section">
+          <div class="logo-placeholder">LOGO</div>
+          <div style="text-align: center; flex: 1;">
+            <div style="font-weight: bold; font-size: 16px;">République Islamique de Mauritanie</div>
+            <div style="font-size: 14px; margin: 5px 0;">Honneur - Fraternité - Justice</div>
+            <div style="font-size: 14px; font-weight: bold; margin-top: 15px;">
+              Centre de Formation et d'Échange à Distance (CFED)
+            </div>
+          </div>
+          <div class="logo-placeholder">CFED</div>
+        </div>
+
+        <div class="header">
+          <div class="title">FICHE DÉTAILLÉE DU DOCUMENT</div>
+        </div>
+
+        <table class="info-table">
+          <tr>
+            <td class="label">Nom du Document</td>
+            <td><strong>${doc.nom}</strong></td>
+          </tr>
+          <tr>
+            <td class="label">Type de Fichier</td>
+            <td>${doc.type}</td>
+          </tr>
+          <tr>
+            <td class="label">Catégorie</td>
+            <td>${doc.categorie}</td>
+          </tr>
+          <tr>
+            <td class="label">Statut</td>
+            <td>
+              <span class="status-badge ${
+                doc.statut === "Validé"
+                  ? "status-valide"
+                  : doc.statut === "En Attente"
+                    ? "status-attente"
+                    : "status-rejete"
+              }">
+                ${doc.statut}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="label">Mission Associée</td>
+            <td>${doc.mission?.nom || "Non assignée"}</td>
+          </tr>
+          <tr>
+            <td class="label">Rubrique</td>
+            <td>${doc.rubrique?.nom || "Non assignée"}</td>
+          </tr>
+          <tr>
+            <td class="label">Date de Téléversement</td>
+            <td>${new Date(doc.createdAt).toLocaleDateString("fr-FR", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}</td>
+          </tr>
+          <tr>
+            <td class="label">Téléversé par</td>
+            <td>${doc.par}</td>
+          </tr>
+          ${
+            doc.description
+              ? `
+          <tr>
+            <td class="label">Description</td>
+            <td>${doc.description}</td>
+          </tr>
+          `
+              : ""
+          }
+          <tr>
+            <td class="label">Chemin du Fichier</td>
+            <td style="font-family: monospace; font-size: 12px;">${doc.chemin}</td>
+          </tr>
+        </table>
+
+        <div style="margin-top: 60px; text-align: center; font-size: 12px; color: #6b7280;">
+          <p>Fiche générée automatiquement le ${new Date().toLocaleDateString("fr-FR", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</p>
+          <p>Centre de Formation et d'Échange à Distance - République Islamique de Mauritanie</p>
+        </div>
+      </body>
+      </html>
+    `
+
+    const element = document.createElement("div")
+    element.innerHTML = detailsContent
+    html2pdf(element).save(`details_${doc.nom.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`)
+    toast.success("Détails du document téléchargés !")
+  }
+
+  const handleDownloadDocument = (doc: Document) => {
+    try {
+      const link = document.createElement("a")
+      link.href = doc.chemin
+      link.download = doc.nom
+      link.target = "_blank"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      toast.success("Téléchargement du document lancé !")
+    } catch (error) {
+      toast.error("Erreur lors du téléchargement du document")
+    }
   }
 
   const handleDownloadCertificate = (doc: Document) => {
@@ -639,11 +965,11 @@ export default function DocumentsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewDetails(doc)}>
                           <Eye className="w-4 h-4 mr-2" />
                           Voir les détails
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownloadDocument(doc)}>
                           <Download className="w-4 h-4 mr-2" />
                           Télécharger
                         </DropdownMenuItem>

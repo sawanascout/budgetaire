@@ -144,47 +144,187 @@ export default function MissionsPage() {
   }
 
   const handleExportMissions = () => {
-    const csvContent = [
-      [
-        "Date",
-        "Missionnaire",
-        "Montant/Jour",
-        "Nombre de Jours",
-        "Total",
-        "Mode de Paiement",
-        "Référence",
-        "Statut",
-        "Activités",
-        "Dépenses",
-      ].join(","),
-      ...filteredMissions.map((mission) =>
-        [
-          `"${new Date(mission.date).toLocaleDateString("fr-FR")}"`,
-          `"${mission.nomMissionnaire}"`,
-          `"${mission.montantParJour} MRU"`,
-          `"${mission.nombreJours}"`,
-          `"${mission.total} MRU"`,
-          `"${mission.modePaiement}"`,
-          `"${mission.reference}"`,
-          `"${mission.statut}"`,
-          `"${mission.activitesCount}"`,
-          `"${mission.depensesCount}"`,
-        ].join(","),
-      ),
-    ].join("\n")
+    const pdfContent = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Export Missions - CFED</title>
+        <style>
+          body { 
+            font-family: 'Times New Roman', serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: white;
+            font-size: 12px;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 15px;
+          }
+          .logo-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+          }
+          .logo-placeholder {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #666;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #666;
+          }
+          .title { 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #1e40af;
+            margin: 15px 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+          }
+          .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+          }
+          .stat-item {
+            text-align: center;
+          }
+          .stat-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2563eb;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="logo-section">
+          <div class="logo-placeholder">LOGO</div>
+          <div style="text-align: center; flex: 1;">
+            <div style="font-weight: bold; font-size: 14px;">République Islamique de Mauritanie</div>
+            <div style="font-size: 12px; margin: 5px 0;">Honneur - Fraternité - Justice</div>
+            <div style="font-size: 12px; font-weight: bold; margin-top: 10px;">
+              Centre de Formation et d'Échange à Distance (CFED)
+            </div>
+          </div>
+          <div class="logo-placeholder">CFED</div>
+        </div>
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
+        <div class="header">
+          <div class="title">RAPPORT D'EXPORT DES MISSIONS</div>
+          <div>Généré le ${new Date().toLocaleDateString("fr-FR", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-item">
+            <div class="stat-number">${stats.totalMissions}</div>
+            <div>Total Missions</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">${stats.missionsActives}</div>
+            <div>Missions Actives</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">${stats.missionsTerminees}</div>
+            <div>Missions Terminées</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">${formatMRU(stats.budgetTotal)}</div>
+            <div>Budget Total</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Missionnaire</th>
+              <th>Montant/Jour</th>
+              <th>Jours</th>
+              <th>Total</th>
+              <th>Mode Paiement</th>
+              <th>Référence</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredMissions
+              .map(
+                (mission) => `
+              <tr>
+                <td>${new Date(mission.date).toLocaleDateString("fr-FR")}</td>
+                <td>${mission.nomMissionnaire}</td>
+                <td>${formatMRU(mission.montantParJour)}</td>
+                <td>${mission.nombreJours}</td>
+                <td>${formatMRU(mission.total)}</td>
+                <td>${mission.modePaiement}</td>
+                <td>${mission.reference}</td>
+                <td>${mission.statut}</td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p>Ce rapport a été généré automatiquement par le système de gestion des missions du CFED</p>
+          <p>Centre de Formation et d'Échange à Distance - République Islamique de Mauritanie</p>
+        </div>
+      </body>
+      </html>
+    `
+
+    const element = document.createElement("div")
+    element.innerHTML = pdfContent
+    const blob = new Blob([pdfContent], { type: "text/html" })
     const url = URL.createObjectURL(blob)
-    link.setAttribute("href", url)
-    link.setAttribute("download", `missions_export_${new Date().toISOString().split("T")[0]}.csv`)
-    link.style.visibility = "hidden"
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `export_missions_${new Date().toISOString().split("T")[0]}.html`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    URL.revokeObjectURL(url)
     toast({
       title: "Succès",
-      description: "Export des missions réalisé avec succès !",
+      description: "Export PDF des missions réalisé avec succès !",
     })
   }
 
