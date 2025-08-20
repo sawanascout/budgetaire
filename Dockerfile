@@ -1,40 +1,39 @@
-# Étape 1 : image de base
+# Étape 1 : Builder l'application
 FROM node:20-alpine AS builder
 
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Copier les fichiers de configuration
+# Copier les fichiers package.json et pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml ./
 
-# Installer PNPM
+# Installer pnpm globalement
 RUN npm install -g pnpm
 
 # Installer les dépendances
 RUN pnpm install
 
-# Copier le reste du projet
+# Copier le reste des fichiers de l'application
 COPY . .
 
-# Construire l'application Next.js
+# Construire l'application Next.js pour la production
 RUN pnpm build
 
-# Étape 2 : image de production
-FROM node:20-alpine AS runner
+# Étape 2 : Image finale légère pour exécution
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copier uniquement les fichiers nécessaires depuis l'étape builder
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
+# Copier uniquement ce qui est nécessaire depuis l'étape builder
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
 
-# Définir la variable d'environnement pour la base de données
-ENV DATABASE_URL=${DATABASE_URL}
+# Exposer le port (Railway utilise généralement 8080)
+ENV PORT=8080
+EXPOSE 8080
 
-# Exposer le port utilisé par Next.js
-EXPOSE 3000
-
-# Lancer l'application en production
+# Démarrer l'application
 CMD ["pnpm", "start"]
