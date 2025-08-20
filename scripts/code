@@ -1,4 +1,4 @@
-INSERT INTO Rubrique (nom, description, budget, "createdAt", "updatedAt") VALUES
+INSERT INTO Rubrique (nom, description, budget, `createdAt`, `updatedAt`) VALUES
 (
   'Mission et Planification',
   'Planification des missions d''identification et coordination générale du projet',

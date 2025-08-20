@@ -112,6 +112,7 @@ export function DocumentFormModal({ isOpen, onClose, onSubmit, missions, rubriqu
   }
 
   return (
+    
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -152,7 +153,7 @@ export function DocumentFormModal({ isOpen, onClose, onSubmit, missions, rubriqu
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner une catégorie" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[9999] bg-white">
                 <SelectItem value="Justificatif">Justificatif</SelectItem>
                 <SelectItem value="Paiement">Paiement</SelectItem>
                 <SelectItem value="Procès-verbal">Procès-verbal</SelectItem>
@@ -173,7 +174,7 @@ export function DocumentFormModal({ isOpen, onClose, onSubmit, missions, rubriqu
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner une rubrique" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[9999] bg-white">
                 {rubriques.map((rubrique) => (
                   <SelectItem key={rubrique.id} value={rubrique.id.toString()}>
                     {rubrique.nom}

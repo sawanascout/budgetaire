@@ -21,6 +21,7 @@ import {
   ImageIcon,
   FileSpreadsheet,
   Archive,
+  User,
 } from "lucide-react"
 import { DocumentFormModal } from "@/components/documents/document-form-modal"
 import { DashboardHeader } from "@/components/dashboard-header"
@@ -131,7 +132,7 @@ export default function DocumentsPage() {
   }) => {
     const result = await createDocument({
       ...data,
-      par: "Utilisateur Actuel", // À remplacer par l'utilisateur connecté
+      par:"Utilisateur Actuel", // À remplacer par l'utilisateur connecté
     })
 
     if (result.success) {
@@ -650,10 +651,7 @@ export default function DocumentsPage() {
               <Upload className="w-4 h-4 mr-2" />
               Téléverser Document
             </Button>
-            <Button variant="outline" onClick={handleExportDocuments}>
-              <Download className="w-4 h-4 mr-2" />
-              Export Liste
-            </Button>
+           
           </div>
 
           <div className="flex items-center space-x-4">
